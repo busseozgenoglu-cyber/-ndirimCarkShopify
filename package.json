@@ -7,6 +7,8 @@
   "scripts": {
     "build": "react-router build",
     "dev": "shopify app dev",
+    "predev": "npm run dev:db",
+    "dev:db": "prisma generate --schema prisma/schema.dev.prisma && prisma db push --schema prisma/schema.dev.prisma",
     "config:link": "shopify app config link",
     "config:use": "shopify app config use",
     "deploy": "shopify app deploy",

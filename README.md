@@ -46,6 +46,10 @@ tek yönlü özet (HMAC-SHA256) ile eşleştirilmesi.
 ```bash
 npm install
 
+# .env.example dosyasını .env olarak kopyalayın (DATABASE_URL satırı gerekli;
+# geri kalanını CLI kendisi doldurur)
+cp .env.example .env
+
 # Projeyi Partner hesabınızdaki uygulamaya bağlar
 # (yoksa yenisini oluşturmayı teklif eder)
 npm run config:link
@@ -54,8 +58,18 @@ npm run config:link
 npm run dev
 ```
 
-`npm run dev` ilk çalıştığında `.env` dosyasını, tünel adresini ve
-`shopify.app.toml` içindeki `client_id` alanını otomatik doldurur.
+`npm run dev` ilk çalıştığında `.env` dosyasındaki eksik değerleri, tünel
+adresini ve `shopify.app.toml` içindeki `client_id` alanını otomatik doldurur.
+
+Her `npm run dev` öncesinde `predev` adımı otomatik olarak
+`npm run dev:db` çalıştırır: bu komut **yalnızca geliştirmeye özel**
+`prisma/schema.dev.prisma` (SQLite) ile Prisma client'ı üretir ve
+`prisma db push` ile tabloları oluşturur. Üretim şeması
+(`prisma/schema.prisma`, PostgreSQL) ve göçler bundan etkilenmez.
+
+CLI, geliştirme sırasında oluşan geçici tünel adresini uygulama yapılandırmasına
+otomatik yazar (`shopify.app.toml` → `automatically_update_urls_on_dev = true`);
+`application_url`'yi elle değiştirmeniz gerekmez.
 
 ### Çarkı vitrinde görünür yapma
 
@@ -64,14 +78,30 @@ npm run dev
 3. Sol menüde **Uygulama yerleştirmeleri** → “İndirim Çarkı” anahtarını açın
 4. **Kaydet** deyin
 
+### Sorun giderme
+
+**Admin'de uygulama ekranı gri/boş görünüyor, konsolda WebSocket veya
+X-Frame-Options hataları var:**
+
+- Tarayıcı, hâlâ **eski/ölü bir tünel adresini** gösteren admin sekmesini
+  açık tutuyor olabilir. Sekmeyi kapatıp uygulamayı CLI'ın terminale yazdığı
+  **önizleme (preview) bağlantısından** yeniden açın.
+- Sayfayı önbelleksiz yenileyin: **Cmd+Shift+R** (Windows/Linux: Ctrl+Shift+R).
+- Sorun sürerse eski yapılandırma izlerini temizleyin:
+  `shopify app dev --reset`
+- `wss://....trycloudflare.com/extensions` bağlantı hatası, tünel kapalıyken
+  açık kalmış bir sekmeden gelir; `npm run dev` çalışırken ve güncel
+  önizleme bağlantısıyla açılan sekmede görülmemelidir.
+
 ---
 
 ## Üretime alma
 
 ```bash
-# 1. Kalıcı bir veritabanı hazırlayın (PostgreSQL önerilir)
-#    prisma/schema.prisma içindeki provider satırını da güncelleyin:
-#      provider = "postgresql"
+# 1. Kalıcı bir veritabanı hazırlayın (PostgreSQL önerilir).
+#    prisma/schema.prisma zaten PostgreSQL sağlayıcısını kullanır;
+#    DATABASE_URL'i postgres bağlantı adresi olarak tanımlamanız yeterlidir.
+#    (Geliştirmede kullanılan prisma/schema.dev.prisma üretimi ETKİLEMEZ.)
 
 # 2. Sunucuda ortam değişkenlerini tanımlayın (.env.example dosyasına bakın)
 
