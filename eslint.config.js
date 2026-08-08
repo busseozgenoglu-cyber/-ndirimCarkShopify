@@ -43,6 +43,23 @@ export default [
         setInterval: "readonly",
         clearInterval: "readonly",
         requestAnimationFrame: "readonly",
+        cancelAnimationFrame: "readonly",
+        performance: "readonly",
+        structuredClone: "readonly",
+        queueMicrotask: "readonly",
+        AbortController: "readonly",
+        AbortSignal: "readonly",
+        CustomEvent: "readonly",
+        Event: "readonly",
+        EventTarget: "readonly",
+        HTMLElement: "readonly",
+        HTMLCanvasElement: "readonly",
+        CanvasRenderingContext2D: "readonly",
+        Image: "readonly",
+        alert: "readonly",
+        confirm: "readonly",
+        btoa: "readonly",
+        atob: "readonly",
         // Node
         process: "readonly",
         console: "readonly",
@@ -57,10 +74,11 @@ export default [
       },
     },
     rules: {
-      "no-unused-vars": [
-        "warn",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
-      ],
+      // Not: eslint-plugin-react gibi eklentiler olmadan çekirdek
+      // "no-unused-vars" kuralı JSX içinde kullanılan import'ları "kullanılmıyor"
+      // sanır (yanlış pozitif). Bu repo ek bağımlılık istemediği için kural
+      // kapalı tutuluyor; tanımsız değişkenler "no-undef" ile yakalanıyor.
+      "no-unused-vars": "off",
       "no-undef": "error",
       "no-console": "off",
     },
