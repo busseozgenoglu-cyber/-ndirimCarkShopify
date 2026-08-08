@@ -4,9 +4,10 @@ import { login } from "../shopify.server";
 export const loader = async ({ request }) => {
   const url = new URL(request.url);
 
-  // Shopify mağaza parametresiyle geldiyse doğrudan kuruluma yönlendir.
+  // Shopify admin'den mağaza parametresiyle geldiyse doğrudan gömülü uygulamaya yönlendir
+  // (token exchange /app üzerinde çalışır; iframe içinde /auth/login'e gitmek X-Frame-Options engeline takılır).
   if (url.searchParams.get("shop")) {
-    throw redirect(`/auth/login?${url.searchParams.toString()}`);
+    throw redirect(`/app?${url.searchParams.toString()}`);
   }
   return { girisVar: Boolean(login) };
 };
