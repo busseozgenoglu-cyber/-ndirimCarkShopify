@@ -42,7 +42,6 @@ export default async function handleRequest(
           reject(error);
         },
         onError(error) {
-          // eslint-disable-next-line no-param-reassign
           responseStatusCode = 500;
           console.error(error);
         },

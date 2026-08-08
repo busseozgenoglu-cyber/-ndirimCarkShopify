@@ -14,7 +14,14 @@ export default defineConfig({
   server: {
     allowedHosts: [host],
     port,
-    hmr: { protocol: "ws", host: "localhost", port: 64999, clientPort: 64999 },
+    hmr: {
+      // Tünel (https) arkasında tarayıcı ws:// bağlantısını "mixed content"
+      // olarak engeller; HOST tanımlıysa (CLI dev akışı) wss kullanılır.
+      protocol: process.env.SHOPIFY_VITE_HMR_USE_WSS ? "wss" : "ws",
+      host: "localhost",
+      port: 64999,
+      clientPort: 64999,
+    },
     fs: { allow: ["app", "node_modules"] },
   },
   plugins: [reactRouter(), tsconfigPaths()],
