@@ -7,16 +7,29 @@ import {
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import prisma from "./db.server";
 
-// 2026-07, Ağustos 2026 itibarıyla en güncel kararlı (stable) sürümdür.
-// Shopify her çeyrekte yeni sürüm yayınlar; üç ayda bir buradan güncelleyin.
 export const API_SURUMU = ApiVersion.July26;
+
+// SHOPIFY_APP_URL'yi temizle:
+// - sondaki slash(lar) kaldırılır   → "https://ornek.railway.app/" düzelir
+// - çift protokol kaldırılır        → "https://https://..." düzelir
+function temizleUrl(deger) {
+  if (!deger) return "";
+  let url = String(deger).trim();
+  // çift https:// veya http:// varsa teke indir
+  url = url.replace(/^(https?:\/\/)+/, (_, p) => p);
+  // sondaki slash(lar)ı kaldır
+  url = url.replace(/\/+$/, "");
+  return url;
+}
+
+const APP_URL = temizleUrl(process.env.SHOPIFY_APP_URL);
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
   apiVersion: API_SURUMU,
   scopes: process.env.SCOPES?.split(",").map((s) => s.trim()).filter(Boolean),
-  appUrl: process.env.SHOPIFY_APP_URL || "",
+  appUrl: APP_URL,
   authPathPrefix: "/auth",
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
