@@ -1,26 +1,17 @@
-# İndirim Çarkı — Shopify uygulama yapılandırması
-#
-# `npm run config:link` komutu bu dosyayı Partner hesabınızdaki uygulamaya bağlar
-# ve client_id satırını otomatik yazar. application_url / redirect_urls satırları
-# `npm run dev` sırasında otomatik güncellenir.
-
 name = "Indirim Carki"
 handle = "indirim-carki"
-application_url = "https://example.com"
+client_id = "58710bf1470e27383103f715b9915877"
+application_url = "https://ndirimcarkshopify-production.up.railway.app"
 embedded = true
 
 [access_scopes]
-# Yalnızca gerçekten kullanılan yetkiler istenir:
-#   write_discounts -> kazananlara tek kullanımlık indirim kodu üretmek için
-#   write_customers -> (isteğe bağlı özellik) e-posta izni veren katılımcıyı
-#                      Shopify müşteri listesine eklemek için
 scopes = "write_discounts,write_customers"
 
 [auth]
 redirect_urls = [
-  "https://example.com/auth/callback",
-  "https://example.com/auth/shopify/callback",
-  "https://example.com/api/auth/callback"
+  "https://ndirimcarkshopify-production.up.railway.app/auth/callback",
+  "https://ndirimcarkshopify-production.up.railway.app/auth/shopify/callback",
+  "https://ndirimcarkshopify-production.up.railway.app/api/auth/callback"
 ]
 
 [webhooks]
@@ -34,7 +25,6 @@ api_version = "2026-07"
   topics = [ "app/scopes_update" ]
   uri = "/webhooks/app/scopes_update"
 
-  # Shopify App Store için ZORUNLU gizlilik (GDPR) webhook'ları
   [[webhooks.subscriptions]]
   compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
   uri = "/webhooks/compliance"
