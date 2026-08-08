@@ -31,6 +31,9 @@ model Session {
   locale        String?
   collaborator  Boolean?  @default(false)
   emailVerified Boolean?  @default(false)
+  // shopify-api v13 token-exchange oturumları bu alanları da yazar
+  refreshToken        String?
+  refreshTokenExpires DateTime?
 
   @@index([shop])
 }
