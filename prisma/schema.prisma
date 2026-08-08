@@ -6,7 +6,8 @@
 // Sağlayıcıyı değiştirirseniz provider satırını da güncelleyin.
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
+  // Geliştirmede SQLite kullanmak için: provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
