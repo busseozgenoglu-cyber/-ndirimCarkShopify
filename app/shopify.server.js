@@ -3,7 +3,6 @@ import {
   ApiVersion,
   AppDistribution,
   shopifyApp,
-  LATEST_API_VERSION,
 } from "@shopify/shopify-app-react-router/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import prisma from "./db.server";
@@ -31,6 +30,9 @@ const shopify = shopifyApp({
   distribution: AppDistribution.AppStore,
   useOnlineTokens: false,
   isEmbeddedApp: true,
+  future: {
+    unstable_managedPricingSupport: false,
+  },
   ...(process.env.SHOP_CUSTOM_DOMAIN
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
     : {}),
