@@ -1,0 +1,13 @@
+{
+  "isim": "İndirim Çarkı",
+  "ayarlar": {
+    "aktif": {
+      "etiket": "Çarkı bu temada göster",
+      "bilgi": "Çarkın yazıları, renkleri ve ödülleri İndirim Çarkı uygulamasından yönetilir."
+    },
+    "proxy": {
+      "etiket": "Uygulama proxy yolu",
+      "bilgi": "Yalnızca uygulama ayarlarındaki proxy yolunu değiştirdiyseniz güncelleyin."
+    }
+  }
+}

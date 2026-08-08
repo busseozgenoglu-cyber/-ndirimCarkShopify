@@ -1,0 +1,16 @@
+node_modules
+.cache
+build
+.env
+.env.*
+!.env.example
+.DS_Store
+*.sqlite
+*.sqlite-journal
+prisma/dev.sqlite*
+/.react-router
+/.shopify
+.vscode
+.idea
+*.log
+extensions/*/dist

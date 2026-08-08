@@ -1,0 +1,13 @@
+{
+  "isim": "Discount Wheel",
+  "ayarlar": {
+    "aktif": {
+      "etiket": "Show the wheel on this theme",
+      "bilgi": "Wording, colors and prizes are managed inside the Discount Wheel app."
+    },
+    "proxy": {
+      "etiket": "App proxy path",
+      "bilgi": "Only change this if you edited the proxy path in the app settings."
+    }
+  }
+}

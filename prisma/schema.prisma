@@ -1,0 +1,77 @@
+// İndirim Çarkı — veritabanı şeması
+//
+// Geliştirmede SQLite, üretimde PostgreSQL/MySQL kullanabilirsiniz:
+//   DATABASE_URL="file:dev.sqlite"                       (sqlite)
+//   DATABASE_URL="postgresql://kullanici:sifre@host/db"  (postgresql)
+// Sağlayıcıyı değiştirirseniz provider satırını da güncelleyin.
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+
+  @@index([shop])
+}
+
+/// Mağaza başına çark ayarları. Tüm alanlar `veri` içinde JSON olarak tutulur;
+/// böylece yeni özellik eklendiğinde şema göçü (migration) gerekmez.
+model CarkAyar {
+  shop        String   @id
+  veri        String
+  guncellendi DateTime @updatedAt
+  olusturuldu DateTime @default(now())
+}
+
+/// Çarkı çeviren her ziyaretçi. GDPR taleplerinde bu tablo üzerinden silinir.
+model Katilimci {
+  id         String   @id @default(cuid())
+  shop       String
+  eposta     String
+  epostaHash String
+  ipHash     String?
+  dilimId    String
+  dilimAdi   String
+  kazandi    Boolean  @default(false)
+  kod        String?
+  kodTipi    String?
+  kodDegeri  String?
+  sonKullanma DateTime?
+  pazarlamaIzni Boolean @default(false)
+  musteriId  String?
+  olusturuldu DateTime @default(now())
+
+  @@index([shop, olusturuldu])
+  @@index([shop, epostaHash])
+  @@index([shop, ipHash])
+}
+
+/// Kısa süreli hız sınırı sayacı (IP başına). Eski kayıtlar otomatik temizlenir.
+model HizSayaci {
+  id          String   @id @default(cuid())
+  shop        String
+  anahtar     String
+  olusturuldu DateTime @default(now())
+
+  @@index([shop, anahtar, olusturuldu])
+}

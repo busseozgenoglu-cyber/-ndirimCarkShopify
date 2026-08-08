@@ -1,0 +1,43 @@
+{% comment %}
+  İndirim Çarkı — uygulama yerleştirme bloğu (app embed).
+
+  Çarkın tüm ayarları (yazılar, renkler, ödüller, görünme kuralları) uygulama
+  panelinden yönetilir. Buradaki ayarlar yalnızca yükleme davranışını belirler.
+{% endcomment %}
+
+{%- if block.settings.aktif -%}
+  <div
+    id="indirim-carki-kok"
+    data-proxy="{{ block.settings.proxy_yolu | default: '/apps/indirim-carki' }}"
+    data-sayfa-tipi="{{ request.page_type }}"
+    data-dil="{{ request.locale.iso_code | default: shop.locale }}"
+    data-tasarim-modu="{% if request.design_mode %}1{% else %}0{% endif %}"
+    hidden
+  ></div>
+
+  {{ 'cark.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'cark.js' | asset_url }}" defer></script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:isim",
+  "target": "body",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "aktif",
+      "label": "t:ayarlar.aktif.etiket",
+      "info": "t:ayarlar.aktif.bilgi",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "proxy_yolu",
+      "label": "t:ayarlar.proxy.etiket",
+      "info": "t:ayarlar.proxy.bilgi",
+      "default": "/apps/indirim-carki"
+    }
+  ]
+}
+{% endschema %}
