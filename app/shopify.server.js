@@ -3,21 +3,17 @@ import {
   ApiVersion,
   AppDistribution,
   shopifyApp,
+  LATEST_API_VERSION,
 } from "@shopify/shopify-app-react-router/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import prisma from "./db.server";
 
 export const API_SURUMU = ApiVersion.July26;
 
-// SHOPIFY_APP_URL'yi temizle:
-// - sondaki slash(lar) kaldırılır   → "https://ornek.railway.app/" düzelir
-// - çift protokol kaldırılır        → "https://https://..." düzelir
 function temizleUrl(deger) {
   if (!deger) return "";
   let url = String(deger).trim();
-  // çift https:// veya http:// varsa teke indir
   url = url.replace(/^(https?:\/\/)+/, (_, p) => p);
-  // sondaki slash(lar)ı kaldır
   url = url.replace(/\/+$/, "");
   return url;
 }
@@ -34,6 +30,7 @@ const shopify = shopifyApp({
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
   useOnlineTokens: false,
+  isEmbeddedApp: true,
   ...(process.env.SHOP_CUSTOM_DOMAIN
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
     : {}),

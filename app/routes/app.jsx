@@ -10,13 +10,10 @@ export const loader = async ({ request }) => {
 
 export default function AppYerlesimi() {
   const { apiKey } = useLoaderData();
-
   return (
     <AppProvider embedded apiKey={apiKey}>
       <ui-nav-menu>
-        <a href="/app" rel="home">
-          Çark ayarları
-        </a>
+        <a href="/app" rel="home">Çark ayarları</a>
         <a href="/app/katilimcilar">Katılımcılar</a>
         <a href="/app/yardim">Kurulum ve yardım</a>
       </ui-nav-menu>
@@ -25,9 +22,7 @@ export default function AppYerlesimi() {
   );
 }
 
-// Shopify'ın hata ve başlık sınırlarını gömülü uygulamaya taşır.
 export const headers = (headersArgs) => boundary.headers(headersArgs);
-
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
