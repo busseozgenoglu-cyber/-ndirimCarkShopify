@@ -1,7 +1,7 @@
 import { authenticate } from "../shopify.server";
 
 /** Dagitimin canliya indigini disaridan dogrulamak icin surum isareti. */
-const YAPI_SURUMU = "2026-08-09-hata-siniflandirma";
+const YAPI_SURUMU = "2026-08-09-tani-modu";
 
 /** GET /apps/indirim-carki/debug — Shopify token geçerliliğini ve
  *  indirim kodu oluşturmayı test eder. Yalnızca hata tespiti için. */

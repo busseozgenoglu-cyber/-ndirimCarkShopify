@@ -86,7 +86,10 @@ export const action = async ({ request }) => {
         `CARK_HATA shop=${shop} adim=indirim_kodu kod=${kod} dilim=${dilim.id} tip=${dilim.tip} detay=${detay}`,
       );
 
-      return hata(ziyaretciMesaji(kod, ayar), { teknik: `${kod}: ${detay}` });
+      return hata(ziyaretciMesaji(kod, ayar), {
+        kod,
+        teknik: `${kod}: ${detay}`,
+      });
     }
   }
 
@@ -161,12 +164,17 @@ function ziyaretciMesaji(kod, ayar) {
  * Shopify app proxy 4xx/5xx yanıtları HTML'e dönüştürdüğü için tüm hatalar
  * 200 döner; hata bilgisi JSON gövdesinde taşınır.
  *
- * CARK_DEBUG=1 ortam değişkeni ayarlıysa teknik detay da gövdeye eklenir —
- * yayına almadan önce bu değişkeni kaldırın.
+ * GEÇİCİ TANI MODU: teşhis bitene kadar ayrıntı VARSAYILAN OLARAK AÇIK.
+ * Kapatmak için Railway'de CARK_DEBUG=0 ayarlayın — yayına çıkmadan önce
+ * mutlaka kapatın, aksi halde ziyaretçi teknik hata kodunu görür.
  */
-function hata(mesaj, { teknik = null } = {}) {
-  const govde = { hata: mesaj };
-  if (teknik && process.env.CARK_DEBUG === "1") govde.teknik = teknik;
+const AYRINTILI_HATA = process.env.CARK_DEBUG !== "0";
+
+function hata(mesaj, { teknik = null, kod = null } = {}) {
+  const govde = {
+    hata: AYRINTILI_HATA && kod ? `${mesaj} [tanı: ${kod}]` : mesaj,
+  };
+  if (teknik && AYRINTILI_HATA) govde.teknik = teknik;
 
   return Response.json(govde, {
     status: 200,
