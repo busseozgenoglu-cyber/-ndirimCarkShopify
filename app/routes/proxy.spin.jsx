@@ -76,10 +76,9 @@ export const action = async ({ request }) => {
     try {
       kodBilgisi = await odulKoduOlustur(admin, dilim, ayar.davranis);
     } catch (e) {
-      console.error(`[${shop}] İndirim kodu üretilemedi:`, e?.message || e);
-      // Kod üretilemezse ziyaretçiyi boşta bırakmayalım: kaybetme ekranı yerine
-      // dürüst bir hata mesajı gösterip kaydı kazanılmamış olarak işaretleriz.
-      return hata(ayar.metinler.hataMesaji, 502);
+      const hataDetay = e?.message || String(e);
+      console.error(`[${shop}] İndirim kodu üretilemedi:`, hataDetay);
+      return hata(`[DEBUG] ${hataDetay}`, 502);
     }
   }
 
