@@ -19,14 +19,16 @@ export const action = async ({ request }) => {
   const { session, admin } = await authenticate.public.appProxy(request);
 
   if (!session || !admin) {
-    return hata("Uygulama bu mağazada kurulu değil.", 403);
+    return hata("Uygulama bu mağazada kurulu değil.", {
+      teknik: "appProxy: session/admin yok",
+    });
   }
 
   const shop = session.shop;
   const ayar = await ayarlariOku(shop);
 
   if (!ayar.aktif || !kampanyaYayindaMi(ayar)) {
-    return hata("Çark şu anda kapalı.", 400);
+    return hata("Çark şu anda kapalı.");
   }
 
   let govde = {};
@@ -40,17 +42,17 @@ export const action = async ({ request }) => {
   const pazarlamaIzni = govde.pazarlamaIzni === true;
 
   if (ayar.davranis.epostaZorunlu && !epostaGecerliMi(eposta)) {
-    return hata(ayar.metinler.epostaHatasi, 400);
+    return hata(ayar.metinler.epostaHatasi);
   }
   if (eposta && !epostaGecerliMi(eposta)) {
-    return hata(ayar.metinler.epostaHatasi, 400);
+    return hata(ayar.metinler.epostaHatasi);
   }
 
   // --- Kötüye kullanım koruması --------------------------------------------
   const ipOzeti = ozetle(istemciIp(request) || "bilinmiyor");
 
   if (await hizSiniriAsildiMi(shop, `ip:${ipOzeti}`, 10, 60)) {
-    return hata("Çok fazla deneme yapıldı. Lütfen bir süre sonra tekrar deneyin.", 429);
+    return hata("Çok fazla deneme yapıldı. Lütfen bir süre sonra tekrar deneyin.");
   }
 
   const epostaOzeti = eposta ? ozetle(eposta) : null;
@@ -63,7 +65,7 @@ export const action = async ({ request }) => {
       select: { id: true },
     });
     if (oncekiKatilim) {
-      return hata(ayar.metinler.tekrarMesaji, 429);
+      return hata(ayar.metinler.tekrarMesaji);
     }
   }
 
@@ -76,8 +78,15 @@ export const action = async ({ request }) => {
     try {
       kodBilgisi = await odulKoduOlustur(admin, dilim, ayar.davranis);
     } catch (e) {
-      console.error(`[${shop}] İndirim kodu üretilemedi:`, e?.message || e);
-      return hata(ayar.metinler.hataMesaji, 502);
+      const kod = e?.kod || "bilinmiyor";
+      const detay = e?.detay || e?.message || String(e);
+
+      // Tek satırda, aranabilir log — Railway'de "CARK_HATA" diye aratın.
+      console.error(
+        `CARK_HATA shop=${shop} adim=indirim_kodu kod=${kod} dilim=${dilim.id} tip=${dilim.tip} detay=${detay}`,
+      );
+
+      return hata(ziyaretciMesaji(kod, ayar), { teknik: `${kod}: ${detay}` });
     }
   }
 
@@ -109,7 +118,9 @@ export const action = async ({ request }) => {
       },
     });
   } catch (e) {
-    console.error(`[${shop}] Katılımcı kaydedilemedi:`, e?.message || e);
+    console.error(
+      `CARK_HATA shop=${shop} adim=katilimci_kayit detay=${e?.message || e}`,
+    );
   }
 
   return Response.json(
@@ -128,11 +139,37 @@ export const action = async ({ request }) => {
 export const loader = () =>
   Response.json({ hata: "Yalnızca POST desteklenir." }, { status: 405 });
 
-// Shopify app proxy 4xx/5xx yanıtları HTML'e dönüştürdüğü için
-// tüm hatalar 200 döner; hata bilgisi JSON gövdesinde taşınır.
-function hata(mesaj, _durum) {
-  return Response.json(
-    { hata: mesaj },
-    { status: 200, headers: { "Cache-Control": "no-store" } },
-  );
+// ---------------------------------------------------------------------------
+// Yardımcılar
+// ---------------------------------------------------------------------------
+
+/** Hata koduna göre ziyaretçiye gösterilecek mesaj. */
+function ziyaretciMesaji(kod, ayar) {
+  switch (kod) {
+    case "hiz_siniri":
+      return "Şu an yoğunluk var, birkaç saniye sonra tekrar deneyin.";
+    case "yetki_yok":
+    case "yapilandirma":
+      // Ziyaretçi düzeltemez; mağaza sahibinin yapması gereken bir iş var.
+      return "Kampanya şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.";
+    default:
+      return ayar.metinler.hataMesaji;
+  }
+}
+
+/**
+ * Shopify app proxy 4xx/5xx yanıtları HTML'e dönüştürdüğü için tüm hatalar
+ * 200 döner; hata bilgisi JSON gövdesinde taşınır.
+ *
+ * CARK_DEBUG=1 ortam değişkeni ayarlıysa teknik detay da gövdeye eklenir —
+ * yayına almadan önce bu değişkeni kaldırın.
+ */
+function hata(mesaj, { teknik = null } = {}) {
+  const govde = { hata: mesaj };
+  if (teknik && process.env.CARK_DEBUG === "1") govde.teknik = teknik;
+
+  return Response.json(govde, {
+    status: 200,
+    headers: { "Cache-Control": "no-store" },
+  });
 }

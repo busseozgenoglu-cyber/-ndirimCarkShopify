@@ -418,10 +418,26 @@
         }),
       })
         .then(function (cevap) {
-          return cevap.json().then(function (govde) {
-            if (!cevap.ok || govde.hata) throw new Error(govde.hata || m.hataMesaji);
-            return govde;
-          });
+          return cevap
+            .text()
+            .then(function (ham) {
+              try {
+                return JSON.parse(ham);
+              } catch (e) {
+                throw new Error(
+                  "Sunucu JSON döndürmedi (HTTP " + cevap.status + ")",
+                );
+              }
+            })
+            .then(function (govde) {
+              if (govde && govde.teknik && window.console) {
+                console.error("[indirim-carki] " + govde.teknik);
+              }
+              if (!cevap.ok || (govde && govde.hata)) {
+                throw new Error((govde && govde.hata) || m.hataMesaji);
+              }
+              return govde;
+            });
         })
         .then(function (sonuc) {
           dondur(sonuc);
