@@ -18,6 +18,15 @@ export const loader = async ({ request }) => {
     return Response.json({ adim: "oturum_yok", hata: "Oturum bulunamadı" });
   }
 
+  // Scope bilgisini hemen döndür
+  const sessionBilgisi = {
+    shop: oturum.shop,
+    scope: oturum.scope,
+    state: oturum.state,
+    isOnline: oturum.isOnline,
+    accessTokenVarMi: Boolean(oturum.accessToken),
+  };
+
   // Temel shop sorgusu
   let magazaBilgisi = null;
   try {
@@ -72,6 +81,7 @@ export const loader = async ({ request }) => {
   } catch (e) {
     return Response.json({
       adim: "indirim_mutation",
+      sessionBilgisi,
       shop: oturum.shop,
       magaza: magazaBilgisi?.data?.shop?.name,
       hata: e?.message || String(e),
@@ -81,6 +91,7 @@ export const loader = async ({ request }) => {
 
   return Response.json({
     adim: "tamam",
+    sessionBilgisi,
     shop: oturum.shop,
     magaza: magazaBilgisi?.data?.shop?.name,
     plan: magazaBilgisi?.data?.shop?.plan?.displayName,
