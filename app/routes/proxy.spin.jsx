@@ -130,9 +130,11 @@ export const action = async ({ request }) => {
 export const loader = () =>
   Response.json({ hata: "Yalnızca POST desteklenir." }, { status: 405 });
 
-function hata(mesaj, durum) {
+// Shopify app proxy 4xx/5xx yanıtları HTML'e dönüştürdüğü için
+// tüm hatalar 200 döner; hata bilgisi JSON gövdesinde taşınır.
+function hata(mesaj, _durum) {
   return Response.json(
     { hata: mesaj },
-    { status: durum, headers: { "Cache-Control": "no-store" } },
+    { status: 200, headers: { "Cache-Control": "no-store" } },
   );
 }
