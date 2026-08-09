@@ -369,3 +369,117 @@ html.ic-kilit body {
   .ic-pencere { animation: none; }
   .ic-yuzen { transition: none; }
 }
+
+/* ============================================================= PREMİUM EFEKTLER */
+
+/* Yüzen buton — nabız animasyonu */
+@keyframes ic-nabiz {
+  0%, 100% { box-shadow: 0 6px 22px rgba(0,0,0,0.22), 0 0 0 0 color-mix(in srgb, var(--ic-ana) 55%, transparent); }
+  60%       { box-shadow: 0 6px 22px rgba(0,0,0,0.22), 0 0 0 16px color-mix(in srgb, var(--ic-ana) 0%, transparent); }
+}
+.ic-yuzen {
+  animation: ic-nabiz 2.8s ease-in-out infinite;
+}
+.ic-yuzen:hover {
+  animation: none;
+}
+
+/* Örtü — buzlu cam efekti */
+.ic-ortu {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Pencere — altın kenarlık ve derin gölge */
+.ic-pencere {
+  border: 1px solid rgba(212,175,55,0.22);
+  box-shadow:
+    0 32px 80px rgba(0,0,0,0.45),
+    0 0 0 1px rgba(212,175,55,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.85);
+}
+
+/* Çark — giriş animasyonu */
+@keyframes ic-cark-giris {
+  from { opacity: 0; transform: scale(0.72) rotate(-18deg); }
+  to   { opacity: 1; transform: scale(1)    rotate(0deg); }
+}
+.ic-cark {
+  animation: ic-cark-giris 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+/* Dönen rim ışığı */
+.ic-rim-isik {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(255,255,255,0.26) 10%,
+    transparent 22%
+  );
+  animation: ic-rim-don 3.2s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: screen;
+}
+@keyframes ic-rim-don {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Göbek butonu — rim ışığının üstünde kalır */
+.ic-gobek { z-index: 3; }
+
+/* İbre sarsılma */
+@keyframes ic-sarsilma {
+  0%,100% { transform: translateX(-50%) rotate(0deg); }
+  20%     { transform: translateX(-50%) rotate(-10deg); }
+  40%     { transform: translateX(-50%) rotate(10deg); }
+  60%     { transform: translateX(-50%) rotate(-6deg); }
+  80%     { transform: translateX(-50%) rotate(6deg); }
+}
+.ic-ibre-sarsilma {
+  animation: ic-sarsilma 0.65s ease !important;
+}
+
+/* Kıvılcım canvas */
+.ic-kivılcım {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Kazanan dilim flash */
+@keyframes ic-flas {
+  0%,100% { opacity: 1; filter: brightness(1); }
+  30%     { opacity: 0.4; filter: brightness(2.5) saturate(1.5); }
+  60%     { opacity: 1; filter: brightness(1.2); }
+}
+.ic-canvas-flas {
+  animation: ic-flas 0.9s ease forwards;
+}
+
+/* İndirim kodu kutusu — altın tema */
+.ic-kod {
+  border-color: rgba(212,175,55,0.7);
+  background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.03));
+  letter-spacing: 0.1em;
+}
+
+/* Kazanma ekranı — altın başlık */
+.ic-sonuc-baslik {
+  background: linear-gradient(135deg, #B8943F, #D4AF37, #FFE97F, #D4AF37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ic-yuzen,
+  .ic-rim-isik,
+  .ic-cark { animation: none; }
+  .ic-ibre-sarsilma { animation: none !important; }
+}

@@ -156,7 +156,7 @@
         ctx.closePath();
         ctx.fillStyle = dilimler[i].renk || "#cccccc";
         ctx.fill();
-        ctx.strokeStyle = "rgba(255,255,255,.7)";
+        ctx.strokeStyle = "rgba(212,175,55,0.85)";
         ctx.lineWidth = 2;
         ctx.stroke();
 
@@ -180,13 +180,107 @@
       ctx.lineWidth = 7;
       ctx.strokeStyle = g.cerceveRenk || g.birincilRenk;
       ctx.stroke();
+
+      // İnce altın iç halka
+      ctx.beginPath();
+      ctx.arc(boyut / 2, boyut / 2, boyut / 2 - 13, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(212,175,55,0.5)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Merkez dekoratif halka
+      ctx.beginPath();
+      ctx.arc(boyut / 2, boyut / 2, 42, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(212,175,55,0.35)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Merkez altın noktalar
+      ctx.fillStyle = "rgba(212,175,55,0.7)";
+      for (var ni = 0; ni < 8; ni++) {
+        var naci = (ni / 8) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(
+          boyut / 2 + Math.cos(naci) * 36,
+          boyut / 2 + Math.sin(naci) * 36,
+          2.5, 0, Math.PI * 2
+        );
+        ctx.fill();
+      }
     }
 
     olcuAyarla();
+
+    // --- Kıvılcım sistemi ---
+    var kivKap = document.createElement("canvas");
+    kivKap.className = "ic-kivılcım";
+    kap.querySelector(".ic-cark").appendChild(kivKap);
+    var kivCtx = kivKap.getContext("2d");
+    var kivler = [];
+    var kivAktif = false;
+    var kivRaf;
+
+    function kivBoyutAyarla() {
+      var dpr2 = window.devicePixelRatio || 1;
+      kivKap.width = boyut * dpr2;
+      kivKap.height = boyut * dpr2;
+      kivKap.style.width = boyut + "px";
+      kivKap.style.height = boyut + "px";
+    }
+    kivBoyutAyarla();
+
+    function kivCiz() {
+      var dpr2 = window.devicePixelRatio || 1;
+      kivCtx.clearRect(0, 0, kivKap.width, kivKap.height);
+      kivCtx.save();
+      kivCtx.scale(dpr2, dpr2);
+      for (var ki = kivler.length - 1; ki >= 0; ki--) {
+        var kp = kivler[ki];
+        kp.x += kp.vx;
+        kp.y += kp.vy;
+        kp.vy += 0.09;
+        kp.can -= 0.038;
+        if (kp.can <= 0) { kivler.splice(ki, 1); continue; }
+        kivCtx.globalAlpha = kp.can;
+        kivCtx.fillStyle = kp.renk;
+        kivCtx.beginPath();
+        kivCtx.arc(kp.x, kp.y, kp.r, 0, Math.PI * 2);
+        kivCtx.fill();
+      }
+      kivCtx.restore();
+      if (kivAktif && Math.random() > 0.3) {
+        var rac = Math.random() * Math.PI * 2;
+        var rr = boyut / 2 - 14;
+        kivler.push({
+          x: boyut / 2 + Math.cos(rac) * rr,
+          y: boyut / 2 + Math.sin(rac) * rr,
+          vx: Math.cos(rac) * (Math.random() * 1.8 + 0.3),
+          vy: Math.sin(rac) * (Math.random() * 1.8 + 0.3) - 0.9,
+          can: 1,
+          r: Math.random() * 2.5 + 0.5,
+          renk: Math.random() > 0.5 ? "#D4AF37" : "#FFE97F",
+        });
+      }
+      if (kivler.length > 0 || kivAktif) {
+        kivRaf = requestAnimationFrame(kivCiz);
+      }
+    }
+
+    function kivBaslat() {
+      if (azHareket) return;
+      kivAktif = true;
+      cancelAnimationFrame(kivRaf);
+      kivCiz();
+    }
+
+    function kivDurdur() {
+      kivAktif = false;
+    }
+
     var olcuZaman;
     window.addEventListener("resize", function () {
       clearTimeout(olcuZaman);
-      olcuZaman = setTimeout(olcuAyarla, 150);
+      olcuZaman = setTimeout(function () { olcuAyarla(); kivBoyutAyarla(); }, 150);
     });
 
     // ---- Aç / kapat --------------------------------------------------------
@@ -302,6 +396,12 @@
       }
 
       donuyor = true;
+      kivBaslat();
+      var ibreEl = kap.querySelector(".ic-ibre");
+      if (ibreEl && !azHareket) {
+        ibreEl.classList.add("ic-ibre-sarsilma");
+        setTimeout(function () { ibreEl.classList.remove("ic-ibre-sarsilma"); }, 650);
+      }
       uyariEl.hidden = true;
       cevirBtn.disabled = true;
       gobekBtn.disabled = true;
@@ -375,6 +475,11 @@
     }
 
     function sonucGoster(sonuc) {
+      kivDurdur();
+      if (!azHareket && sonuc.kazandi) {
+        canvas.classList.add("ic-canvas-flas");
+        setTimeout(function () { canvas.classList.remove("ic-canvas-flas"); }, 900);
+      }
       form.hidden = true;
       uyariEl.hidden = true;
       sonucEl.hidden = false;
@@ -497,6 +602,7 @@
           '<div class="ic-cark">' +
             '<span class="ic-ibre" aria-hidden="true"></span>' +
             '<canvas class="ic-canvas" role="img" aria-label="' + kacis(m.baslik) + '"></canvas>' +
+            '<div class="ic-rim-isik" aria-hidden="true"></div>' +
             '<button class="ic-gobek" type="button">' + kacis(m.gobekMetni) + "</button>" +
           "</div>" +
 
@@ -535,7 +641,7 @@
     tuval.width = window.innerWidth;
     tuval.height = window.innerHeight;
 
-    var renkler = ["#7c3aed", "#ec4899", "#10b981", "#3b82f6", "#f59e0b", "#ef4444"];
+    var renkler = ["#D4AF37", "#C5A028", "#FFE97F", "#1a1a1a", "#B8943F", "#F0D060", "#8B6914", "#FAE27C"];
     var kutu = pencere.getBoundingClientRect();
     var mx = kutu.left + kutu.width / 2;
     var my = kutu.top + kutu.height / 3;
