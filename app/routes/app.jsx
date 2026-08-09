@@ -16,6 +16,7 @@ export default function AppYerlesimi() {
         <a href="/app" rel="home">Çark ayarları</a>
         <a href="/app/katilimcilar">Katılımcılar</a>
         <a href="/app/yardim">Kurulum ve yardım</a>
+        <a href="/app/baglanti">Bağlantı durumu</a>
       </ui-nav-menu>
       <Outlet />
     </AppProvider>
