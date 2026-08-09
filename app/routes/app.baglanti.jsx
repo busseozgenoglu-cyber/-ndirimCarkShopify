@@ -1,12 +1,7 @@
 import { redirect } from "react-router";
+import { Form, useNavigation } from "react-router";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
-
-/**
- * Bu route'un iki görevi var:
- * 1. GET: Admin'in Shopify GraphQL token'ını test eder.
- * 2. POST action=yenile: Oturumu siler → OAuth'u yeniden başlatır.
- */
 
 export const loader = async ({ request }) => {
   const { admin, session } = await authenticate.admin(request);
@@ -14,6 +9,7 @@ export const loader = async ({ request }) => {
   let durum = "ok";
   let magazaAdi = null;
   let hata = null;
+  let scope = null;
 
   try {
     const cevap = await admin.graphql(`{ shop { name } }`);
@@ -28,67 +24,84 @@ export const loader = async ({ request }) => {
     hata = e?.message || String(e);
   }
 
-  return { durum, magazaAdi, hata, shop: session.shop };
+  // Mevcut session scope'unu göster
+  try {
+    const dbSession = await prisma.session.findFirst({
+      where: { shop: session.shop },
+      select: { scope: true, accessToken: true },
+    });
+    scope = dbSession?.scope ?? "(boş)";
+  } catch (_) {}
+
+  return { durum, magazaAdi, hata, shop: session.shop, scope };
 };
 
 export const action = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
 
-  // Tüm oturumları sil — bir sonraki admin ziyaretinde OAuth yeniden çalışır.
+  // Tüm oturumları sil — bir sonraki yüklemede OAuth yeniden çalışır.
   try {
     await prisma.session.deleteMany({ where: { shop } });
   } catch (e) {
     console.error("Oturumlar silinemedi:", e?.message || e);
   }
 
-  // OAuth yeniden başlatmak için ana sayfaya yönlendir.
-  return redirect(`/auth?shop=${shop}`);
+  // /app'e yönlendir — authenticate.admin oturum olmadığını görünce OAuth başlatır.
+  return redirect("/app");
 };
 
 export default function BaglantiTest({ loaderData }) {
-  const { durum, magazaAdi, hata, shop } = loaderData;
-
-  function yenile() {
-    fetch("/app/baglanti", { method: "POST" }).then(() => {
-      window.location.href = `/auth?shop=${shop}`;
-    });
-  }
+  const { durum, magazaAdi, hata, shop, scope } = loaderData;
+  const navigation = useNavigation();
+  const gonderiliyor = navigation.state === "submitting";
 
   return (
     <s-page heading="Shopify Bağlantı Durumu">
       {durum === "ok" ? (
         <s-banner tone="success" heading="Bağlantı başarılı">
           <s-paragraph>
-            Mağaza adı: <strong>{magazaAdi}</strong>. Shopify GraphQL API
-            bağlantısı çalışıyor; indirim kodu oluşturulabilir.
+            Mağaza: <strong>{magazaAdi}</strong>. GraphQL API bağlantısı
+            çalışıyor.
           </s-paragraph>
+          <s-paragraph>Mevcut scope: <code>{scope}</code></s-paragraph>
         </s-banner>
       ) : (
         <s-banner tone="critical" heading="Shopify bağlantısı başarısız">
           <s-paragraph>
-            GraphQL API ile bağlantı kurulamadı. Hata: <code>{hata}</code>
+            Hata: <code>{hata}</code>
           </s-paragraph>
+          <s-paragraph>Mevcut scope: <code>{scope}</code></s-paragraph>
           <s-paragraph>
-            "Oturumu Yenile" düğmesine basın. Shopify sizi tekrar giriş
-            ekranına yönlendirecek; izinleri onaylayınca yeni bir token
-            alınır ve sorun çözülür.
+            Kök neden: Token geçersiz veya eksik scope. Oturumu silip OAuth'u
+            yeniden çalıştırmak gerekiyor.
           </s-paragraph>
         </s-banner>
       )}
 
-      <s-section heading="Oturumu Yenile">
+      <s-section heading="Oturumu Yenile (Token Sıfırla)">
         <s-stack direction="block" gap="base">
           <s-paragraph>
-            Eğer çarkı çevirince <em>"İndirim kodu oluşturulamadı"</em> hatası
-            alıyorsanız, aşağıdaki düğmeye basarak Shopify iznini yenileyin.
-            Bu işlem oturumu sıfırlar ve Shopify sizden tekrar izin onayı
-            ister — kaç saniye sürer, ardından her şey normal çalışmaya devam
-            eder.
+            Çarkı çevirince <em>"İndirim kodu oluşturulamadı"</em> veya{" "}
+            <em>"Bir sorun oluştu"</em> hatası alıyorsanız buradan token'ı
+            sıfırlayın. Oturum silinir ve Shopify yeni izin onayı ister;
+            onaylayınca her şey düzelir.
           </s-paragraph>
-          <s-button variant="primary" tone="critical" onClick={yenile}>
-            Oturumu Sil ve Yeniden Bağlan
-          </s-button>
+          <s-paragraph>
+            Mağaza: <strong>{shop}</strong>
+          </s-paragraph>
+          <Form method="post">
+            <s-button
+              variant="primary"
+              tone="critical"
+              type="submit"
+              disabled={gonderiliyor || undefined}
+            >
+              {gonderiliyor
+                ? "Oturum siliniyor…"
+                : "Oturumu Sil ve Yeniden Bağlan"}
+            </s-button>
+          </Form>
         </s-stack>
       </s-section>
     </s-page>

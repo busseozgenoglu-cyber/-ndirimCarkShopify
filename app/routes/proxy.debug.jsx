@@ -35,6 +35,7 @@ export const loader = async ({ request }) => {
   } catch (e) {
     return Response.json({
       adim: "shop_query",
+      sessionBilgisi,
       shop: oturum.shop,
       hata: e?.message || String(e),
       hataTip: e?.constructor?.name,
