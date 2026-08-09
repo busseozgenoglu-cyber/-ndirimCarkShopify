@@ -419,7 +419,7 @@
       })
         .then(function (cevap) {
           return cevap.json().then(function (govde) {
-            if (!cevap.ok) throw new Error(govde.hata || m.hataMesaji);
+            if (!cevap.ok || govde.hata) throw new Error(govde.hata || m.hataMesaji);
             return govde;
           });
         })
