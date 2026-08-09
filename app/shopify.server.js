@@ -19,11 +19,32 @@ function temizleUrl(deger) {
 
 const APP_URL = temizleUrl(process.env.SHOPIFY_APP_URL);
 
+/**
+ * shopify.app.toml ile AYNI izinler. SCOPES ortam değişkeni Railway'de
+ * unutulursa veya eski değeri taşırsa uygulama sessizce yanlış izinlerle
+ * kurulur ve indirim kodu üretimi "Access denied" ile patlar. Bu yüzden
+ * ortam değişkeni yoksa buradaki listeye düşüyoruz.
+ *
+ * ÖNEMLİ: shopify.app.toml içindeki access_scopes değişirse burayı da güncelle.
+ */
+const VARSAYILAN_SCOPES = "write_discounts,write_customers";
+
+const SCOPE_LISTESI = (process.env.SCOPES || VARSAYILAN_SCOPES)
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+if (!process.env.SCOPES) {
+  console.warn(
+    `SCOPES ortam degiskeni yok — varsayilan kullaniliyor: ${SCOPE_LISTESI.join(",")}`,
+  );
+}
+
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
   apiVersion: API_SURUMU,
-  scopes: process.env.SCOPES?.split(",").map((s) => s.trim()).filter(Boolean),
+  scopes: SCOPE_LISTESI,
   appUrl: APP_URL,
   authPathPrefix: "/auth",
   sessionStorage: new PrismaSessionStorage(prisma),

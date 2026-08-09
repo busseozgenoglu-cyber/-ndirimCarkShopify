@@ -1,5 +1,8 @@
 import { authenticate } from "../shopify.server";
 
+/** Dagitimin canliya indigini disaridan dogrulamak icin surum isareti. */
+const YAPI_SURUMU = "2026-08-09-hata-siniflandirma";
+
 /** GET /apps/indirim-carki/debug — Shopify token geçerliliğini ve
  *  indirim kodu oluşturmayı test eder. Yalnızca hata tespiti için. */
 export const loader = async ({ request }) => {
@@ -11,7 +14,11 @@ export const loader = async ({ request }) => {
     oturum = sonuc.session;
     admin = sonuc.admin;
   } catch (e) {
-    return Response.json({ adim: "proxy_auth", hata: e?.message || String(e) });
+    return Response.json({
+      yapi: YAPI_SURUMU,
+      adim: "proxy_auth",
+      hata: e?.message || String(e),
+    });
   }
 
   if (!oturum || !admin) {
