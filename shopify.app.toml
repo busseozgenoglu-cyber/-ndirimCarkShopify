@@ -1,7 +1,7 @@
 name = "Indirim Carki"
 handle = "indirim-carki"
 client_id = "c2a7140be0fb5a9241c8bf1181e0594b"
-application_url = "https://ndirimcarkshopify-production.up.railway.app"
+application_url = "https://ndirimcark-production.up.railway.app"
 embedded = true
 
 [access_scopes]
@@ -9,9 +9,9 @@ scopes = "write_discounts,write_customers"
 
 [auth]
 redirect_urls = [
-  "https://ndirimcarkshopify-production.up.railway.app/auth/callback",
-  "https://ndirimcarkshopify-production.up.railway.app/auth/shopify/callback",
-  "https://ndirimcarkshopify-production.up.railway.app/api/auth/callback"
+  "https://ndirimcark-production.up.railway.app/auth/callback",
+  "https://ndirimcark-production.up.railway.app/auth/shopify/callback",
+  "https://ndirimcark-production.up.railway.app/api/auth/callback"
 ]
 
 [webhooks]
