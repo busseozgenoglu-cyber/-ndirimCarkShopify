@@ -1,5 +1,5 @@
 import { redirect, Form, useNavigation } from "react-router";
-import { authenticate } from "../shopify.server";
+import { authenticate, apiVersion } from "../shopify.server";
 import prisma from "../db.server";
 import { odulKoduOlustur } from "../indirim.server";
 
@@ -25,9 +25,35 @@ async function hataMetniCikar(e) {
     if (e.status === 500 && !govde) {
       return "Shopify token yenileme başarısız oldu (oturum bayat/geçersiz olabilir). Aşağıdan oturumu sıfırlayıp yeniden bağlanın.";
     }
+    // "@shopify/admin-api-client" (admin.graphql'in arkasındaki kütüphane)
+    // 2xx olmayan yanıtlarda gövdeyi HİÇ OKUMADAN atıyor — bu yüzden govde
+    // burada da genelde boş kalır. Shopify'ın gerçekte ne dediğini görmek
+    // için kütüphaneyi atlayıp ham istek deniyoruz (aşağıda hamIstekDene).
     return `HTTP ${e.status}${e.statusText ? ` ${e.statusText}` : ""}${govde ? ` — ${govde}` : ""}`;
   }
   return e?.message || String(e);
+}
+
+/**
+ * admin.graphql() başarısız olunca gerçek nedeni asla göstermiyor (bkz.
+ * yukarıdaki not). Aynı isteği kütüphaneyi atlayıp doğrudan Shopify'a
+ * göndererek gerçek HTTP durumunu ve gövdeyi okuyoruz — teşhis için.
+ */
+async function hamIstekDene(shop, accessToken) {
+  try {
+    const cevap = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Access-Token": accessToken,
+      },
+      body: JSON.stringify({ query: "{ shop { name } }" }),
+    });
+    const govde = await cevap.text();
+    return `Ham istek: HTTP ${cevap.status} ${cevap.statusText} — ${govde.slice(0, 500)}`;
+  } catch (e) {
+    return `Ham istek de başarısız: ${e?.message || String(e)}`;
+  }
 }
 
 export const loader = async ({ request }) => {
@@ -36,6 +62,7 @@ export const loader = async ({ request }) => {
   let durum = "ok";
   let magazaAdi = null;
   let hata = null;
+  let hamSonuc = null;
   let scope = null;
 
   try {
@@ -49,6 +76,9 @@ export const loader = async ({ request }) => {
   } catch (e) {
     durum = "hata";
     hata = await hataMetniCikar(e);
+    if (session.accessToken) {
+      hamSonuc = await hamIstekDene(session.shop, session.accessToken);
+    }
   }
 
   try {
@@ -63,7 +93,7 @@ export const loader = async ({ request }) => {
 
   const scopeEksik = !String(scope || "").includes(GEREKLI_SCOPE);
 
-  return { durum, magazaAdi, hata, shop: session.shop, scope, scopeEksik };
+  return { durum, magazaAdi, hata, hamSonuc, shop: session.shop, scope, scopeEksik };
 };
 
 export const action = async ({ request }) => {
@@ -126,7 +156,7 @@ const COZUM_ONERILERI = {
 };
 
 export default function BaglantiTest({ loaderData, actionData }) {
-  const { durum, magazaAdi, hata, shop, scope, scopeEksik } = loaderData;
+  const { durum, magazaAdi, hata, hamSonuc, shop, scope, scopeEksik } = loaderData;
   const test = actionData?.test;
   const navigation = useNavigation();
   const gonderiliyor = navigation.state === "submitting";
@@ -148,6 +178,11 @@ export default function BaglantiTest({ loaderData, actionData }) {
           <s-paragraph>
             Hata: <code>{hata}</code>
           </s-paragraph>
+          {hamSonuc && (
+            <s-paragraph>
+              <code>{hamSonuc}</code>
+            </s-paragraph>
+          )}
           <s-paragraph>
             Mevcut scope: <code>{scope}</code>
           </s-paragraph>
