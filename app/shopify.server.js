@@ -53,6 +53,11 @@ const shopify = shopifyApp({
   isEmbeddedApp: true,
   future: {
     unstable_managedPricingSupport: false,
+    // Kapalıysa (varsayılan) kütüphane token exchange'de hâlâ "non-expiring"
+    // offline token istiyor — Shopify artık bunları TAMAMEN reddediyor
+    // ("[API] Non-expiring access tokens are no longer accepted"). Bu yüzden
+    // her admin.graphql çağrısı, oturumu sıfırlasak bile 403 ile patlıyordu.
+    expiringOfflineAccessTokens: true,
   },
   ...(process.env.SHOP_CUSTOM_DOMAIN
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
