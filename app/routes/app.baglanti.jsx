@@ -5,6 +5,31 @@ import { odulKoduOlustur } from "../indirim.server";
 
 const GEREKLI_SCOPE = "write_discounts";
 
+/**
+ * `admin.graphql` başarısız olunca her zaman anlamlı bir Error fırlatmaz —
+ * arka planda token yenileme denemesi başarısız olduğunda kütüphane çıplak
+ * bir `Response` fırlatır (bkz. shopify-app-react-router refresh-token.js).
+ * `Response` nesnesinin `.message` alanı yoktur, bu yüzden eskiden burada
+ * anlamsız bir "[object Response]" yazısı görünüyordu. Durum kodunu ve
+ * gövdeyi okuyup gerçek nedeni (genelde token yenileme başarısızlığı →
+ * oturum bayat) ortaya çıkarıyoruz.
+ */
+async function hataMetniCikar(e) {
+  if (e instanceof Response) {
+    let govde = "";
+    try {
+      govde = await e.clone().text();
+    } catch {
+      /* gövde okunamadı */
+    }
+    if (e.status === 500 && !govde) {
+      return "Shopify token yenileme başarısız oldu (oturum bayat/geçersiz olabilir). Aşağıdan oturumu sıfırlayıp yeniden bağlanın.";
+    }
+    return `HTTP ${e.status}${e.statusText ? ` ${e.statusText}` : ""}${govde ? ` — ${govde}` : ""}`;
+  }
+  return e?.message || String(e);
+}
+
 export const loader = async ({ request }) => {
   const { admin, session } = await authenticate.admin(request);
 
@@ -23,7 +48,7 @@ export const loader = async ({ request }) => {
     }
   } catch (e) {
     durum = "hata";
-    hata = e?.message || String(e);
+    hata = await hataMetniCikar(e);
   }
 
   try {

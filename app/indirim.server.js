@@ -80,6 +80,25 @@ function hataMetni(liste) {
 // GraphQL çalıştırıcı
 // ---------------------------------------------------------------------------
 
+/**
+ * Kitaplığın HttpResponseError'ı `message` alanında Shopify'ın gövdesini
+ * (`body.errors`) zaten taşır — ama eskiden 401/403 dalında bu mesaj hiç
+ * okunmadan "HTTP 403" gibi anlamsız bir özet yazılıyordu. Asıl neden
+ * (gerçekten scope mi, yoksa mağaza/plan kısıtlaması gibi başka bir şey mi)
+ * bu yüzden hiç görünmüyordu.
+ */
+function shopifyHataGovdesi(e) {
+  const govde = e?.response?.body;
+  if (govde) {
+    try {
+      return JSON.stringify(govde);
+    } catch {
+      /* döngüsel yapı vb. */
+    }
+  }
+  return e?.message || "";
+}
+
 async function graphqlCalistir(admin, sorgu, degiskenler) {
   let cevap;
 
@@ -93,13 +112,24 @@ async function graphqlCalistir(admin, sorgu, degiskenler) {
     if (durum === 401 || durum === 403) {
       throw new IndirimHatasi(
         "Uygulamanın bu mağazada indirim oluşturma izni yok.",
-        { kod: "yetki_yok", detay: `HTTP ${durum}` },
+        { kod: "yetki_yok", detay: `HTTP ${durum} — ${shopifyHataGovdesi(e)}` },
       );
     }
     if (durum === 429) {
       throw new IndirimHatasi("Shopify hız sınırı aşıldı.", {
         kod: "hiz_siniri",
         detay: "HTTP 429",
+      });
+    }
+    // shopify-app-react-router, token yenileme başarısız olduğunda çıplak bir
+    // Response fırlatır (.message yok) — String(e) "[object Response]" verir.
+    // Bu genelde bayat/geçersiz bir oturumun (eski client_id, silinmiş token…)
+    // işaretidir; "yetki_yok" olarak sınıflandırıp merchant'ı doğru çözüme
+    // (oturumu sıfırla) yönlendiriyoruz.
+    if (e instanceof Response) {
+      throw new IndirimHatasi("Uygulamanın bu mağazada indirim oluşturma izni yok.", {
+        kod: "yetki_yok",
+        detay: `HTTP ${durum ?? "bilinmiyor"} — token yenileme başarısız (oturum bayat olabilir)`,
       });
     }
     throw new IndirimHatasi("Shopify Admin API'ye ulaşılamadı.", {
