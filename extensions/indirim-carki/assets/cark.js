@@ -465,10 +465,14 @@
 
     function dondur(sonuc) {
       var index = Math.max(0, Math.min(adet - 1, Number(sonuc.index) || 0));
+      // Dilim i'nin (döndürülmemiş) merkez açısı ciz()'de "i*dilimAcisi - PI/2"
+      // olarak çizilir; ibre ekranda sabit -PI/2'de (üstte) durur. Ekrandaki
+      // açı = yerel açı + aci olduğundan, dilim merkezinin ibreyle çakışması
+      // için aci = -index*dilimAcisi olmalı. Eskiden buraya fazladan
+      // "-PI/2 - dilimAcisi/2" eklenmişti; 6 dilimde bu tam 2 dilim kaymaya
+      // (120°) denk geliyordu — çark görsel olarak yanlış dilimde duruyordu.
       var hedefMod =
-        (((-Math.PI / 2 - (index * dilimAcisi + dilimAcisi / 2)) % (Math.PI * 2)) +
-          Math.PI * 2) %
-        (Math.PI * 2);
+        (((-index * dilimAcisi) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
       var mevcutMod = ((aci % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
       var fark = hedefMod - mevcutMod;
       if (fark < 0) fark += Math.PI * 2;
