@@ -1,5 +1,6 @@
 import { authenticate } from "../shopify.server";
 import { ayarlariOku, vitrinAyari, kampanyaYayindaMi } from "../cark.server";
+import { abonelikVarMi } from "../abonelik.server";
 
 /**
  * GET /apps/indirim-carki/config
@@ -11,6 +12,15 @@ export const loader = async ({ request }) => {
 
   if (!session) {
     return Response.json({ aktif: false }, { status: 200 });
+  }
+
+  // Ücretli plan yoksa çark vitrinde gösterilmez. Mağaza normal çalışmaya
+  // devam eder; yalnızca bu bölüm devre dışı kalır.
+  if (!(await abonelikVarMi(session.shop))) {
+    return Response.json(
+      { aktif: false },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   }
 
   const ayar = await ayarlariOku(session.shop);

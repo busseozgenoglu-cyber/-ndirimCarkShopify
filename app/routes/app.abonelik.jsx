@@ -1,4 +1,5 @@
 import { authenticate } from "../shopify.server";
+import { abonelikOnbelleginiTemizle } from "../abonelik.server";
 
 /**
  * Planlar Partner panelinde tanımlı (Managed Pricing), ödeme akışını Shopify
@@ -12,6 +13,10 @@ const UYGULAMA_HANDLE = process.env.SHOPIFY_APP_HANDLE || "indirim-carki";
 export const loader = async ({ request }) => {
   const { billing, session } = await authenticate.admin(request);
   const magaza = session.shop.replace(".myshopify.com", "");
+
+  // Merchant abone olduktan sonra buraya döner; vitrin önbelleğini burada
+  // düşürmezsek çark beş dakikaya kadar kapalı görünmeye devam eder.
+  abonelikOnbelleginiTemizle(session.shop);
 
   let aktifMi = false;
   let abonelikler = [];

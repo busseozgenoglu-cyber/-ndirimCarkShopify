@@ -1,6 +1,7 @@
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
 import { ayarlariOku, dilimSec, kampanyaYayindaMi } from "../cark.server";
+import { abonelikVarMi } from "../abonelik.server";
 import { odulKoduOlustur, musteriEkle } from "../indirim.server";
 import {
   ozetle,
@@ -25,6 +26,13 @@ export const action = async ({ request }) => {
   }
 
   const shop = session.shop;
+
+  // config ucu kapalı olsa da buraya doğrudan istek atılabilir; ücretli plan
+  // kontrolü asıl olarak burada yapılmalı.
+  if (!(await abonelikVarMi(shop))) {
+    return hata("Çark şu anda kapalı.", { teknik: "aktif abonelik yok" });
+  }
+
   const ayar = await ayarlariOku(shop);
 
   if (!ayar.aktif || !kampanyaYayindaMi(ayar)) {
