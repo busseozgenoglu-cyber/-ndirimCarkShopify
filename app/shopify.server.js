@@ -52,7 +52,11 @@ const shopify = shopifyApp({
   useOnlineTokens: false,
   isEmbeddedApp: true,
   future: {
-    unstable_managedPricingSupport: false,
+    // Planlar Partner panelinde tanımlı (Managed Pricing). Bu bayrak kapalıyken
+    // billing.check() yerel bir billingConfig bekliyor ve abonelik durumunu hiç
+    // göremiyorduk; uygulama içinde plan seçimi olmadığı için de App Store
+    // incelemesi 1.2.2'den geri döndü.
+    unstable_managedPricingSupport: true,
     // Kapalıysa (varsayılan) kütüphane token exchange'de hâlâ "non-expiring"
     // offline token istiyor — Shopify artık bunları TAMAMEN reddediyor
     // ("[API] Non-expiring access tokens are no longer accepted"). Bu yüzden
